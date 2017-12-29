@@ -1,95 +1,180 @@
-var   canvas = document.querySelector('canvas'),
-         ctx = canvas.getContext('2d'),
-   particles = [],
-patriclesNum = 500,
-           w = 500,
-           h = 500,
-      colors = ['#f35d4f','#f36849','#c0d988','#6ddaf1','#f1e85b'];
- 
-//canvas.width = 500;
-//canvas.height = 500;
-canvas.style.left = (window.innerWidth - 500)/2+'px';
 
-if(window.innerHeight>500)
-canvas.style.top = (window.innerHeight - 500)/2+'px';
-
-function Factory(){  
-  this.x =  Math.round( Math.random() * w);
-  this.y =  Math.round( Math.random() * h);
-  this.rad = Math.round( Math.random() * 1) + 1;
-  this.rgba = colors[ Math.round( Math.random() * 3) ];
-  this.vx = Math.round( Math.random() * 3) - 1.5;
-  this.vy = Math.round( Math.random() * 3) - 1.5;
+function canvasSupport () {
+    return Modernizr.canvas;
 }
-   
-function draw(){
-  ctx.clearRect(0, 0, w, h);
-  ctx.globalCompositeOperation = 'lighter';
-  for(var i = 0;i < patriclesNum; i++){
-    var temp = particles[i];
-    var factor = 1;
-     
-    for(var j = 0; j<patriclesNum; j++){
+
+function canvasApp() 
+{
+    
+    if (!canvasSupport()) {  
+        return;
+    }
+  
+    
+    function drawScreen () 
+    {   
+        context.globalCompositeOperation = "source-over";
+        context.fillStyle = "rgba(0, 0, 0, 0.3)";
+        context.fillRect(0, 0, theCanvas.width, theCanvas.height);
+	      //context.globalCompositeOperation = "lighter";
+        
+        var gradient = context.createRadialGradient( 
+          theCanvas.width * 0.5, 
+          theCanvas.height * 0.5, 
+          0, 
+          theCanvas.width * 0.5, 
+          theCanvas.height * 0.5, 500 
+        );
+        
+        gradient.addColorStop(0,'rgba(0, 70, 70, 1)');
+		    gradient.addColorStop(1,'rgba(0, 8, 14, 1)');
+		
+		    context.fillStyle = gradient;
+		    context.fillRect( 0, 0, theCanvas.width, theCanvas.height );
       
-       var temp2 = particles[j];
-       ctx.linewidth = 0.5;
-      
-       if(temp.rgba == temp2.rgba && findDistance(temp, temp2)<50){
-          ctx.strokeStyle = temp.rgba;
-          ctx.beginPath();
-          ctx.moveTo(temp.x, temp.y);
-          ctx.lineTo(temp2.x, temp2.y);
-          ctx.stroke();
-          factor++;
-       }
+        var ball;
+        
+        for (var i = 0; i < balls.length; i++ ) 
+        {
+            var current = i;
+          
+            ball = balls[i];
+            ball.x += ball.xunits;
+            ball.y += ball.yunits;
+            context.beginPath();
+          
+            var gradient = context.createRadialGradient(
+              ball.x, ball.y, 0, ball.x, ball.y, ball.radius
+            );
+            
+            gradient.addColorStop(0, "rgba(255,255,255,0.75)");
+            gradient.addColorStop(0.4, "rgba(255,255,255,0.75)");
+            gradient.addColorStop(0.4, ball.color);
+		        context.fillStyle = gradient;
+		
+            context.arc(ball.x,ball.y,ball.radius,0,Math.PI*2,true);
+            
+            context.shadowColor = '#999'; 
+            context.shadowBlur = 30;
+            context.shadowOffsetX = 10;
+            context.shadowOffsetY = 15;
+          
+            context.closePath();
+            context.fill();
+                
+            if (ball.x > theCanvas.width || ball.x < 0 ) {
+                ball.angle = 180 - ball.angle;
+                updateBall(ball);
+            } else if (ball.y > theCanvas.height || ball.y < 0) {
+                ball.angle = 360 - ball.angle;
+                updateBall(ball);
+            } 
+          
+          
+            for (var z = 0; z < balls.length; z++ ) 
+            {
+                if( z != i )
+                {
+                    /*
+                    *  balls connecting
+                    */
+                    var zxLower  = balls[z].x - distance,
+                        zxHigher = balls[z].x + distance,
+                        zyLower  = balls[z].y - distance,
+                        zyHigher = balls[z].y + distance
+                  
+                    if( balls[i].x >= zxLower  && balls[i].x <= zxHigher  && 
+                        balls[i].y >= zyLower  && balls[i].y <= zyHigher) {
+                   
+                      context.beginPath();
+                      context.strokeStyle = 'rgba(255,255,255,0.5)';
+                      context.moveTo(balls[i].x , balls[i].y );
+                      context.lineTo(balls[z].x , balls[z].y );
+                      context.stroke();
+                    } 
+                  
+                    /*
+                    *  balls bouncing
+                    */
+                    var zxLower  = balls[z].x - (balls[z].radius),
+                        zxHigher = balls[z].x + (balls[z].radius),
+                        zyLower  = balls[z].y - (balls[z].radius),
+                        zyHigher = balls[z].y + (balls[z].radius)
+                  
+                    if( balls[i].x >= zxLower  && balls[i].x <= zxHigher  && 
+                        balls[i].y >= zyLower  && balls[i].y <= zyHigher) {
+                        
+                        balls[i].angle = 180 - balls[i].angle;
+                        updateBall(balls[i]);
+                      
+                        balls[z].angle = 180 - balls[z].angle;
+                        updateBall(balls[z]);
+                    }
+                }
+            }
+        }
+    }
+  
+    function updateBall(ball){
+        ball.radians = ball.angle * Math.PI/ 180;
+        ball.xunits = Math.cos(ball.radians) * ball.speed;
+        ball.yunits = Math.sin(ball.radians) * ball.speed;
     }
     
+    var numBalls = 10,
+        minSize = 14,
+        maxSize = 14,
+        maxSpeed = (maxSize+1),
+        balls = new Array(),
+        tempBall,
+        tempX,
+        tempY,
+        tempSpeed,
+        tempAngle,
+        tempRadius,
+        tempRadians,
+        tempXunits,
+        tempYunits,
+        tempColor,
+        distance = 150,
+        speedDiff = 4; 
     
-    ctx.fillStyle = temp.rgba;
-    ctx.strokeStyle = temp.rgba;
+    var theCanvas = document.getElementById("canvas"),
+        context = theCanvas.getContext("2d");
+  
+   
+    for(var i=0; i<numBalls; i++){
+      
+        tempRadius = Math.floor(Math.random()*maxSize)+minSize;
+        tempX = tempRadius*2 + (Math.floor(Math.random()*theCanvas.width)-tempRadius*2);
+        tempY = tempRadius*2 + (Math.floor(Math.random()*theCanvas.height)-tempRadius*2);
+        tempSpeed = (maxSpeed-tempRadius) + speedDiff;
+        tempAngle = Math.floor(Math.random()*360);
+        tempRadians = tempAngle * Math.PI/ 180;
+        tempXunits = Math.cos(tempRadians) * tempSpeed;
+        tempYunits = Math.sin(tempRadians) * tempSpeed;
+        tempColor = "rgba(255, 20, 147, 0.5)";
+	    
+        tempBall = {
+                 x:tempX
+                ,y:tempY
+                ,radius:tempRadius 
+                ,speed:tempSpeed
+                ,angle:tempAngle
+                ,xunits:tempXunits
+                ,yunits:tempYunits
+                ,color:tempColor
+        }
+        
+        balls.push(tempBall);
+    } 
     
-    ctx.beginPath();
-    ctx.arc(temp.x, temp.y, temp.rad*factor, 0, Math.PI*2, true);
-    ctx.fill();
-    ctx.closePath();
-    
-    ctx.beginPath();
-    ctx.arc(temp.x, temp.y, (temp.rad+5)*factor, 0, Math.PI*2, true);
-    ctx.stroke();
-    ctx.closePath();
-    
-
-    temp.x += temp.vx;
-    temp.y += temp.vy;
-    
-    if(temp.x > w)temp.x = 0;
-    if(temp.x < 0)temp.x = w;
-    if(temp.y > h)temp.y = 0;
-    if(temp.y < 0)temp.y = h;
-  }
+    function loop() {
+        window.setTimeout(loop, 20);
+        drawScreen();
+    }
+  
+    loop();
 }
 
-function findDistance(p1,p2){  
-  return Math.sqrt( Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2) );
-}
-
-window.requestAnimFrame = (function(){
-  return  window.requestAnimationFrame       ||
-          window.webkitRequestAnimationFrame ||
-          window.mozRequestAnimationFrame    ||
-          function( callback ){
-            window.setTimeout(callback, 1000 / 60);
-          };
-})();
-
-(function init(){
-  for(var i = 0; i < patriclesNum; i++){
-    particles.push(new Factory);
-  }
-})();
-
-(function loop(){
-  draw();
-  requestAnimFrame(loop);
-})();
-
+canvasApp();
