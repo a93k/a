@@ -1,18 +1,3 @@
-var   canvas = document.querySelector('canvas'),
-         ctx = canvas.getContext('2d'),
-   particles = [],
-patriclesNum = 500,
-           w = 500,
-           h = 500,
-      colors = ['#f35d4f','#f36849','#c0d988','#6ddaf1','#f1e85b'];
- 
-canvas.width = 500;
-canvas.height = 500;
-canvas.style.left = (window.innerWidth - 500)/2+'px';
-
-if(window.innerHeight>500)
-canvas.style.top = (window.innerHeight - 500)/2+'px';
-  
 function Factory(){  
   this.x =  Math.round( Math.random() * w);
   this.y =  Math.round( Math.random() * h);
