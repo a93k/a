@@ -6,8 +6,8 @@ patriclesNum = 500,
            h = 500,
       colors = ['#f35d4f','#f36849','#c0d988','#6ddaf1','#f1e85b'];
  
-canvas.width = 1920;
-canvas.height = 1024;
+//canvas.width = 500;
+//canvas.height = 500;
 canvas.style.left = (window.innerWidth - 500)/2+'px';
 
 if(window.innerHeight>500)
